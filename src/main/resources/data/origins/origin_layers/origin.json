@@ -1,1 +1,16 @@
-{"replace":true,"order":0,"enabled":true,"origins":["elemental_eyes:fire","elemental_eyes:water","elemental_eyes:electric","elemental_eyes:wind","elemental_eyes:earth"],"allow_random":true,"allow_random_unchoosable":false,"hidden":false}
+{
+  "replace": true,
+  "order": 0,
+  "enabled": true,
+  "origins": [
+    "elemental_eyes:fire",
+    "elemental_eyes:water",
+    "elemental_eyes:electric",
+    "elemental_eyes:wind",
+    "elemental_eyes:earth"
+  ],
+  "allow_random": true,
+  "exclude_random": [],
+  "allow_random_unchoosable": false,
+  "hidden": false
+}
