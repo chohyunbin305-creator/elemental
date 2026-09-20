@@ -7,4 +7,6 @@ public interface ElementCarrier {
     String elementalEyes$getReaction();
     int elementalEyes$getReactionTicks();
     void elementalEyes$setReaction(String id, int ticks);
+    void elementalEyes$markFireHit();
+    boolean elementalEyes$fireHitActive();
 }

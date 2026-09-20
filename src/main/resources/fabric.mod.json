@@ -1,1 +1,17 @@
-{"schemaVersion":1,"id":"elemental_eyes","version":"${version}","name":"Elemental Eyes","description":"Accessories-based five-element combat and reaction system.","environment":"*","entrypoints":{"main":["kr.fallen.elemental.ElementalEyes"]},"mixins":["elemental_eyes.mixins.json"],"depends":{"fabricloader":">=0.16.0","minecraft":"~1.21.1","java":">=21","fabric-api":"*","accessories":">=1.1.0-beta.21"}}
+{
+  "schemaVersion": 1,
+  "id": "elemental_eyes",
+  "version": "${version}",
+  "name": "Elemental Origins",
+  "description": "Five-element Origins addon with elemental auras, base effects and reactions.",
+  "environment": "*",
+  "entrypoints": { "main": ["kr.fallen.elemental.ElementalEyes"] },
+  "mixins": ["elemental_eyes.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": ">=0.105.0",
+    "origins": ">=1.13.0-pre.3"
+  }
+}

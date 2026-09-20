@@ -1,1 +1,8 @@
-{"item.elemental_eyes.fire_eye":"불의 신의 눈동자","item.elemental_eyes.water_eye":"물의 신의 눈동자","item.elemental_eyes.electric_eye":"전기의 신의 눈동자","item.elemental_eyes.wind_eye":"바람의 신의 눈동자","item.elemental_eyes.earth_eye":"땅의 신의 눈동자","item.elemental_eyes.fire_tester":"불 원소 테스트 막대","item.elemental_eyes.water_tester":"물 원소 테스트 막대","item.elemental_eyes.electric_tester":"전기 원소 테스트 막대","item.elemental_eyes.wind_tester":"바람 원소 테스트 막대","item.elemental_eyes.earth_tester":"땅 원소 테스트 막대"}
+{
+ "item.elemental_eyes.fire_tester":"불 원소 테스터","item.elemental_eyes.water_tester":"물 원소 테스터","item.elemental_eyes.electric_tester":"전기 원소 테스터","item.elemental_eyes.wind_tester":"바람 원소 테스터","item.elemental_eyes.earth_tester":"땅 원소 테스터",
+ "origin.elemental_eyes.fire.name":"불 원소","origin.elemental_eyes.fire.description":"공격에 불 원소를 부착합니다.",
+ "origin.elemental_eyes.water.name":"물 원소","origin.elemental_eyes.water.description":"공격에 물 원소를 부착합니다.",
+ "origin.elemental_eyes.electric.name":"전기 원소","origin.elemental_eyes.electric.description":"공격에 전기 원소를 부착합니다.",
+ "origin.elemental_eyes.wind.name":"바람 원소","origin.elemental_eyes.wind.description":"공격에 바람 원소를 부착합니다.",
+ "origin.elemental_eyes.earth.name":"땅 원소","origin.elemental_eyes.earth.description":"공격에 땅 원소를 부착합니다."
+}
