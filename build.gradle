@@ -24,7 +24,6 @@ sourceSets {
         java {
             exclude 'kr/fallen/elemental/ElementLogic.java'
             exclude 'kr/fallen/elemental/ElementCarrier.java'
-            exclude 'kr/fallen/elemental/client/**'
         }
     }
 }
