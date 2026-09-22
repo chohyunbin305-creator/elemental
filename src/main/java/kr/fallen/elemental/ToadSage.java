@@ -10,7 +10,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.*;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.*;
 import org.joml.Vector3f;
 
@@ -37,13 +37,15 @@ public final class ToadSage {
     private static final Identifier FIRE_SLOW = Identifier.of(ElementalEyes.MODID, "fire_slow");
 
     private static final DustParticleEffect FIRE_ORANGE =
-            new DustParticleEffect(new Vector3f(1.0f, 0.28f, 0.02f), 1.8f);
+            new DustParticleEffect(new Vector3f(1.0f, 0.30f, 0.02f), 1.9f);
     private static final DustParticleEffect FIRE_YELLOW =
-            new DustParticleEffect(new Vector3f(1.0f, 0.58f, 0.05f), 1.45f);
+            new DustParticleEffect(new Vector3f(1.0f, 0.62f, 0.05f), 1.55f);
     private static final DustParticleEffect FIRE_RED =
-            new DustParticleEffect(new Vector3f(0.9f, 0.08f, 0.01f), 1.6f);
+            new DustParticleEffect(new Vector3f(0.92f, 0.07f, 0.01f), 1.65f);
     private static final DustParticleEffect OIL_BROWN =
-            new DustParticleEffect(new Vector3f(0.38f, 0.20f, 0.07f), 1.25f);
+            new DustParticleEffect(new Vector3f(0.34f, 0.17f, 0.055f), 1.35f);
+    private static final DustParticleEffect OIL_GOLD =
+            new DustParticleEffect(new Vector3f(0.88f, 0.58f, 0.12f), 1.45f);
 
     public static boolean isToad(ServerPlayerEntity player) {
         return OriginBridge.has(player, "elemental_eyes:toad_sage");
@@ -57,36 +59,43 @@ public final class ToadSage {
         Vec3d start = player.getEyePos();
         Vec3d dir = player.getRotationVec(1).normalize();
 
-        // A short, messy cone of oil rather than a single thin line.
-        for (int i = 2; i <= 22; i++) {
-            double z = i * 0.52;
-            double spread = 0.035 + z * 0.055;
+        // Faster-looking, longer and wider spray. Yellow/gold dominates over brown.
+        for (int i = 2; i <= 28; i++) {
+            double z = i * 0.56;
+            double spread = 0.06 + z * 0.06;
             Vec3d q = start.add(dir.multiply(z));
-            world.spawnParticles(OIL_BROWN, q.x, q.y, q.z, 3, spread, spread * 0.65, spread, 0.012);
+            world.spawnParticles(OIL_GOLD, q.x, q.y, q.z, 5,
+                    spread, spread * 0.62, spread, 0.035);
+            world.spawnParticles(ParticleTypes.FALLING_HONEY, q.x, q.y, q.z, 4,
+                    spread * 0.78, spread * 0.48, spread * 0.78, 0.045);
             if ((i & 1) == 0) {
-                world.spawnParticles(ParticleTypes.FALLING_HONEY, q.x, q.y, q.z, 2,
-                        spread * 0.7, spread * 0.45, spread * 0.7, 0.02);
+                world.spawnParticles(OIL_BROWN, q.x, q.y, q.z, 2,
+                        spread * 0.70, spread * 0.50, spread * 0.70, 0.022);
             }
         }
 
-        LivingEntity target = target(player, 12.0, 1.25);
+        LivingEntity target = target(player, 15.5, 1.8);
         if (target != null) {
-            ((Oiled) target).elemental$oil(140);
+            ((Oiled) target).elemental$oil(160);
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 0.9f, 0.72f);
-            world.spawnParticles(OIL_BROWN, target.getX(), target.getBodyY(0.5), target.getZ(),
-                    28, 0.55, 0.7, 0.55, 0.025);
-            world.spawnParticles(ParticleTypes.FALLING_HONEY, target.getX(), target.getBodyY(0.55), target.getZ(),
-                    16, 0.45, 0.65, 0.45, 0.035);
+                    SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.2f, 0.72f);
+            world.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.ENTITY_SLIME_SQUISH_SMALL, SoundCategory.PLAYERS, 0.8f, 0.62f);
+            oilBurst(world, target, 38);
         }
     }
 
-    public static void skillFire(ServerPlayerEntity player) {
+    public static void startFire(ServerPlayerEntity player) {
         if (!isToad(player) || fireCd.getOrDefault(player.getUuid(), 0) > 0) return;
         fireCd.put(player.getUuid(), 160);
-        spray.put(player.getUuid(), 20); // about 1 second
-        player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 1.0f, 0.72f);
+        spray.put(player.getUuid(), 100); // hard cap: 5 seconds
+        player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
+                SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.9f, 0.68f);
+    }
+
+    public static void stopFire(ServerPlayerEntity player) {
+        spray.remove(player.getUuid());
+        remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
     }
 
     public static void tick(ServerPlayerEntity player) {
@@ -105,23 +114,27 @@ public final class ToadSage {
 
         ensure(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH, 4.0);
         ensure(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH, 0.75);
-        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.14);
+        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.20);
 
         int ticks = spray.getOrDefault(player.getUuid(), 0);
         if (ticks > 0) {
-            ensure(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW, -0.015);
+            // Noticeably slow while maintaining the breath.
+            ensure(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW, -0.055);
             spray.put(player.getUuid(), ticks - 1);
 
-            // Dense visual cloud every tick; damage every 4 ticks.
             firePulse(player, ticks % 4 == 0);
+
+            // Repeating low whoosh while the key is held.
+            if (ticks % 8 == 0) {
+                player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
+                        SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.48f, 0.62f);
+            }
             if (ticks % 5 == 0) {
                 player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
-                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.45f, 0.78f);
+                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.32f, 0.78f);
             }
 
-            if (ticks == 1) {
-                remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
-            }
+            if (ticks == 1) remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
         } else {
             remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
         }
@@ -132,68 +145,64 @@ public final class ToadSage {
         Vec3d start = player.getEyePos().add(0, -0.10, 0);
         Vec3d dir = player.getRotationVec(1).normalize();
 
-        // Naruto-style "whoosh": a thick expanding orange/red cloud.
-        for (int i = 2; i <= 18; i++) {
-            double z = i * 0.43;
-            double spread = 0.10 + z * 0.22;
+        for (int i = 2; i <= 20; i++) {
+            double z = i * 0.44;
+            double spread = 0.11 + z * 0.23;
             Vec3d q = start.add(dir.multiply(z));
 
             world.spawnParticles(FIRE_ORANGE, q.x, q.y, q.z, 5,
-                    spread, spread * 0.65, spread, 0.018);
-            world.spawnParticles(FIRE_YELLOW, q.x, q.y, q.z, 3,
-                    spread * 0.75, spread * 0.50, spread * 0.75, 0.014);
+                    spread, spread * 0.64, spread, 0.025);
+            world.spawnParticles(FIRE_YELLOW, q.x, q.y, q.z, 4,
+                    spread * 0.78, spread * 0.50, spread * 0.78, 0.022);
             world.spawnParticles(FIRE_RED, q.x, q.y, q.z, 2,
-                    spread * 0.9, spread * 0.55, spread * 0.9, 0.012);
-
+                    spread * 0.90, spread * 0.55, spread * 0.90, 0.018);
             if ((i & 1) == 0) {
                 world.spawnParticles(ParticleTypes.SMOKE, q.x, q.y, q.z, 2,
-                        spread * 0.65, spread * 0.45, spread * 0.65, 0.018);
+                        spread * 0.66, spread * 0.44, spread * 0.66, 0.020);
             }
         }
 
         if (!dealDamage) return;
 
-        Box area = player.getBoundingBox()
-                .stretch(dir.multiply(8.0))
-                .expand(2.7);
-
+        Box area = player.getBoundingBox().stretch(dir.multiply(9.0)).expand(3.0);
         for (LivingEntity target : world.getEntitiesByClass(
-                LivingEntity.class,
-                area,
+                LivingEntity.class, area,
                 e -> e != player && e.isAlive() && !e.isSpectator())) {
 
             Vec3d to = target.getBoundingBox().getCenter().subtract(start);
             double forward = to.dotProduct(dir);
-            if (forward < 0.2 || forward > 8.0) continue;
+            if (forward < 0.2 || forward > 9.0) continue;
 
-            Vec3d nearestOnAxis = dir.multiply(forward);
-            double side = to.subtract(nearestOnAxis).length();
-            double allowedRadius = 0.55 + forward * 0.25;
-            if (side > allowedRadius) continue;
-            if (!player.canSee(target)) continue;
+            double side = to.subtract(dir.multiply(forward)).length();
+            double allowedRadius = 0.62 + forward * 0.27;
+            if (side > allowedRadius || !player.canSee(target)) continue;
 
-            // Ordinary flame damage: armor applies, and Fire Resistance blocks it.
+            // Baseline breath damage is ordinary fire damage and is blocked by Fire Resistance.
             if (!target.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
-                target.damage(player.getDamageSources().playerAttack(player), 1.2f);
+                target.damage(player.getDamageSources().playerAttack(player), 1.0f);
+                target.setOnFireFor(2);
             }
 
-            // Attribute reaction is separate, so oil can ignite from any FIRE-tagged skill.
-            AttributeSystem.hit(player, target, Element.FIRE);
+            // Only this character's flame breath can start the special 13-second oil burn.
+            if (target instanceof Oiled oiled && oiled.elemental$isOiled()) {
+                igniteOil(target);
+            }
         }
     }
 
     public static void igniteOil(LivingEntity target) {
         Oiled oiled = (Oiled) target;
-        if (!oiled.elemental$isOiled()) return;
+        if (!oiled.elemental$isOiled() || oiled.elemental$burnTicks() > 0) return;
 
+        // First ignition fixes the timer at 13 seconds. It never refreshes.
         oiled.elemental$oil(0);
-        oiled.elemental$burn(100); // refreshed by FIRE hits; remains 5 seconds after the last flame hit
+        oiled.elemental$burn(260);
 
         if (target.getWorld() instanceof ServerWorld world) {
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.8f, 0.85f);
+                    SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.9f, 0.82f);
             world.spawnParticles(FIRE_ORANGE, target.getX(), target.getBodyY(0.5), target.getZ(),
-                    34, 0.65, 0.8, 0.65, 0.045);
+                    36, 0.65, 0.82, 0.65, 0.045);
             world.spawnParticles(ParticleTypes.FLAME, target.getX(), target.getBodyY(0.5), target.getZ(),
                     18, 0.55, 0.75, 0.55, 0.05);
         }
@@ -203,35 +212,51 @@ public final class ToadSage {
         if (!(entity.getWorld() instanceof ServerWorld world)) return;
 
         int oil = state.elemental$oilTicks();
-        if (oil > 0 && oil % 6 == 0) {
-            world.spawnParticles(OIL_BROWN,
-                    entity.getX(), entity.getBodyY(0.50), entity.getZ(),
-                    4, 0.38, 0.55, 0.38, 0.012);
+        if (oil > 0 && oil % 4 == 0) {
+            // Highly visible clumps around the oiled victim.
+            world.spawnParticles(OIL_GOLD,
+                    entity.getX(), entity.getBodyY(0.48), entity.getZ(),
+                    7, 0.48, 0.72, 0.48, 0.020);
             world.spawnParticles(ParticleTypes.FALLING_HONEY,
-                    entity.getX(), entity.getBodyY(0.58), entity.getZ(),
-                    2, 0.30, 0.48, 0.30, 0.018);
+                    entity.getX(), entity.getBodyY(0.56), entity.getZ(),
+                    5, 0.40, 0.68, 0.40, 0.030);
+            world.spawnParticles(OIL_BROWN,
+                    entity.getX(), entity.getBodyY(0.42), entity.getZ(),
+                    2, 0.44, 0.60, 0.44, 0.014);
         }
 
         int burn = state.elemental$burnTicks();
         if (burn > 0) {
+            // Special combo DOT: ignores Fire Resistance.
             if (burn % 20 == 0) {
-                // This is intentionally non-fire-tagged damage so Fire Resistance cannot nullify it.
                 entity.damage(entity.getDamageSources().magic(), 1.0f);
+            }
+            if (burn % 10 == 0) {
                 world.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
-                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.55f, 0.9f + world.random.nextFloat() * 0.2f);
+                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS,
+                        0.62f, 0.88f + world.random.nextFloat() * 0.18f);
             }
             if (burn % 3 == 0) {
                 world.spawnParticles(FIRE_ORANGE,
                         entity.getX(), entity.getBodyY(0.45), entity.getZ(),
-                        4, 0.38, 0.55, 0.38, 0.025);
+                        4, 0.38, 0.58, 0.38, 0.028);
                 world.spawnParticles(ParticleTypes.FLAME,
                         entity.getX(), entity.getBodyY(0.50), entity.getZ(),
-                        3, 0.34, 0.55, 0.34, 0.03);
+                        3, 0.34, 0.58, 0.34, 0.032);
                 world.spawnParticles(ParticleTypes.SMOKE,
                         entity.getX(), entity.getBodyY(0.72), entity.getZ(),
-                        1, 0.26, 0.35, 0.26, 0.012);
+                        1, 0.27, 0.36, 0.27, 0.014);
             }
         }
+    }
+
+    private static void oilBurst(ServerWorld world, LivingEntity target, int count) {
+        world.spawnParticles(OIL_GOLD, target.getX(), target.getBodyY(0.5), target.getZ(),
+                count, 0.62, 0.78, 0.62, 0.035);
+        world.spawnParticles(ParticleTypes.FALLING_HONEY, target.getX(), target.getBodyY(0.55), target.getZ(),
+                count / 2, 0.52, 0.72, 0.52, 0.045);
+        world.spawnParticles(OIL_BROWN, target.getX(), target.getBodyY(0.45), target.getZ(),
+                Math.max(4, count / 5), 0.50, 0.66, 0.50, 0.025);
     }
 
     private static LivingEntity target(ServerPlayerEntity player, double range, double radius) {
@@ -257,9 +282,7 @@ public final class ToadSage {
     private static void remove(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute,
                                Identifier id) {
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);
-        if (instance != null && instance.getModifier(id) != null) {
-            instance.removeModifier(id);
-        }
+        if (instance != null && instance.getModifier(id) != null) instance.removeModifier(id);
     }
 
     private static void dec(Map<UUID, Integer> map, ServerPlayerEntity player) {
