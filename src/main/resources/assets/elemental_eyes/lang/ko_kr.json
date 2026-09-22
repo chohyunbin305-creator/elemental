@@ -1,8 +1,1 @@
-{
- "item.elemental_eyes.fire_tester":"불 원소 테스터","item.elemental_eyes.water_tester":"물 원소 테스터","item.elemental_eyes.electric_tester":"전기 원소 테스터","item.elemental_eyes.wind_tester":"바람 원소 테스터","item.elemental_eyes.earth_tester":"땅 원소 테스터",
- "origin.elemental_eyes.fire.name":"불 원소","origin.elemental_eyes.fire.description":"공격에 불 원소를 부착합니다.",
- "origin.elemental_eyes.water.name":"물 원소","origin.elemental_eyes.water.description":"공격에 물 원소를 부착합니다.",
- "origin.elemental_eyes.electric.name":"전기 원소","origin.elemental_eyes.electric.description":"공격에 전기 원소를 부착합니다.",
- "origin.elemental_eyes.wind.name":"바람 원소","origin.elemental_eyes.wind.description":"공격에 바람 원소를 부착합니다.",
- "origin.elemental_eyes.earth.name":"땅 원소","origin.elemental_eyes.earth.description":"공격에 땅 원소를 부착합니다."
-}
+{"origin.elemental_eyes.toad_sage.name":"두꺼비 선인 (테스트)","origin.elemental_eyes.toad_sage.description":"튼튼한 신체와 두꺼비 기름, 화염 분사를 사용하는 테스트 캐릭터.","key.elemental_eyes.skill1":"스킬 1 - 두꺼비 기름","key.elemental_eyes.skill2":"스킬 2 - 화염 분사","category.elemental_eyes":"Elemental Characters"}
