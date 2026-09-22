@@ -35,6 +35,21 @@ public class ElementalEyesClient implements ClientModInitializer {
     }
 
     private static KeyBinding findBinding(MinecraftClient client, String translationKey) {
+        // Origins keeps its modded key binding in a public static field rather than
+        // a dedicated GameOptions field. Resolve it reflectively so this addon does
+        // not need Origins on its compile classpath.
+        try {
+            Class<?> originsClient = Class.forName("io.github.apace100.origins.OriginsClient");
+            Field field = originsClient.getField("secondaryActiveKeyBinding");
+            Object value = field.get(null);
+            if (value instanceof KeyBinding binding &&
+                    translationKey.equals(binding.getTranslationKey())) {
+                return binding;
+            }
+        } catch (Throwable ignored) {}
+
+        // Fallback for alternate Origins builds that expose the binding through
+        // GameOptions directly.
         try {
             for (Field field : client.options.getClass().getDeclaredFields()) {
                 if (!KeyBinding.class.isAssignableFrom(field.getType())) continue;
