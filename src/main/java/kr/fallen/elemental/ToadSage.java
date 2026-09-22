@@ -2,6 +2,7 @@ package kr.fallen.elemental;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.*;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.*;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -10,7 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.*;
 import org.joml.Vector3f;
 
@@ -74,8 +74,19 @@ public final class ToadSage {
             }
         }
 
-        LivingEntity target = target(player, 15.5, 1.8);
-        if (target != null) {
+        // Oil coats every visible target inside the spray cone, not just the first hit.
+        Box area = player.getBoundingBox().stretch(dir.multiply(15.5)).expand(2.6);
+        for (LivingEntity target : world.getEntitiesByClass(
+                LivingEntity.class, area,
+                e -> e != player && e.isAlive() && !e.isSpectator())) {
+            Vec3d to = target.getBoundingBox().getCenter().subtract(start);
+            double forward = to.dotProduct(dir);
+            if (forward < 0.2 || forward > 15.5) continue;
+
+            double side = to.subtract(dir.multiply(forward)).length();
+            double allowedRadius = 0.72 + forward * 0.105;
+            if (side > allowedRadius || !player.canSee(target)) continue;
+
             ((Oiled) target).elemental$oil(160);
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
                     SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.2f, 0.72f);
@@ -114,12 +125,12 @@ public final class ToadSage {
 
         ensure(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH, 4.0);
         ensure(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH, 0.75);
-        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.20);
+        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.30);
 
         int ticks = spray.getOrDefault(player.getUuid(), 0);
         if (ticks > 0) {
             // Noticeably slow while maintaining the breath.
-            ensure(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW, -0.055);
+            ensure(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW, -0.070);
             spray.put(player.getUuid(), ticks - 1);
 
             firePulse(player, ticks % 4 == 0);
@@ -145,7 +156,7 @@ public final class ToadSage {
         Vec3d start = player.getEyePos().add(0, -0.10, 0);
         Vec3d dir = player.getRotationVec(1).normalize();
 
-        for (int i = 2; i <= 20; i++) {
+        for (int i = 2; i <= 25; i++) {
             double z = i * 0.44;
             double spread = 0.11 + z * 0.23;
             Vec3d q = start.add(dir.multiply(z));
@@ -164,22 +175,22 @@ public final class ToadSage {
 
         if (!dealDamage) return;
 
-        Box area = player.getBoundingBox().stretch(dir.multiply(9.0)).expand(3.0);
+        Box area = player.getBoundingBox().stretch(dir.multiply(11.0)).expand(3.3);
         for (LivingEntity target : world.getEntitiesByClass(
                 LivingEntity.class, area,
                 e -> e != player && e.isAlive() && !e.isSpectator())) {
 
             Vec3d to = target.getBoundingBox().getCenter().subtract(start);
             double forward = to.dotProduct(dir);
-            if (forward < 0.2 || forward > 9.0) continue;
+            if (forward < 0.2 || forward > 11.0) continue;
 
             double side = to.subtract(dir.multiply(forward)).length();
-            double allowedRadius = 0.62 + forward * 0.27;
+            double allowedRadius = 0.62 + forward * 0.245;
             if (side > allowedRadius || !player.canSee(target)) continue;
 
             // Baseline breath damage is ordinary fire damage and is blocked by Fire Resistance.
             if (!target.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
-                target.damage(player.getDamageSources().playerAttack(player), 1.0f);
+                target.damage(player.getDamageSources().playerAttack(player), 1.2f);
                 target.setOnFireFor(2);
             }
 
@@ -212,6 +223,11 @@ public final class ToadSage {
         if (!(entity.getWorld() instanceof ServerWorld world)) return;
 
         int oil = state.elemental$oilTicks();
+        if (oil > 0 && oil % 5 == 0) {
+            // Sticky oil lightly slows its victim without particles or a HUD icon.
+            entity.addStatusEffect(new StatusEffectInstance(
+                    StatusEffects.SLOWNESS, 10, 0, true, false, false));
+        }
         if (oil > 0 && oil % 4 == 0) {
             // Highly visible clumps around the oiled victim.
             world.spawnParticles(OIL_GOLD,
@@ -259,21 +275,15 @@ public final class ToadSage {
                 Math.max(4, count / 5), 0.50, 0.66, 0.50, 0.025);
     }
 
-    private static LivingEntity target(ServerPlayerEntity player, double range, double radius) {
-        Vec3d a = player.getEyePos();
-        Vec3d b = a.add(player.getRotationVec(1).multiply(range));
-        Box box = player.getBoundingBox().stretch(player.getRotationVec(1).multiply(range)).expand(radius);
-        EntityHitResult hit = net.minecraft.entity.projectile.ProjectileUtil.raycast(
-                player, a, b, box,
-                e -> e instanceof LivingEntity && !e.isSpectator(),
-                range * range);
-        return hit != null && hit.getEntity() instanceof LivingEntity living ? living : null;
-    }
-
     private static void ensure(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute,
                                Identifier id, double value) {
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);
-        if (instance != null && instance.getModifier(id) == null) {
+        if (instance == null) return;
+
+        EntityAttributeModifier current = instance.getModifier(id);
+        if (current == null || current.value() != value
+                || current.operation() != EntityAttributeModifier.Operation.ADD_VALUE) {
+            if (current != null) instance.removeModifier(id);
             instance.addPersistentModifier(new EntityAttributeModifier(
                     id, value, EntityAttributeModifier.Operation.ADD_VALUE));
         }

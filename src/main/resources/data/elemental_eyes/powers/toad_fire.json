@@ -1,1 +1,1 @@
-{"type":"origins:active_self","cooldown":160,"hud_render":{"should_render":true,"bar_index":1},"key":{"key":"key.origins.secondary_active"},"entity_action":{"type":"origins:execute_command","command":"elemental_fire"}}
+{"type":"origins:active_self","cooldown":160,"hud_render":{"should_render":true,"sprite_location":"elemental_eyes:textures/gui/skill_cooldowns.png","bar_index":1,"icon_index":1,"order":1},"key":{"key":"key.origins.secondary_active"},"entity_action":{"type":"origins:execute_command","command":"elemental_fire"}}
