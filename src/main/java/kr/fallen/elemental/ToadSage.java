@@ -106,14 +106,14 @@ public final class ToadSage {
         if (!isToad(player) || fireCd.getOrDefault(player.getUuid(), 0) > 0) return;
         fireCd.put(player.getUuid(), 160);
         spray.put(player.getUuid(), 100); // hard cap: 5 seconds
-        ServerPlayNetworking.send(player, new FireStatePayload(true));
+        sendFireState(player, true);
         player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
                 SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.9f, 0.68f);
     }
 
     public static void stopFire(ServerPlayerEntity player) {
         if (spray.remove(player.getUuid()) != null) {
-            ServerPlayNetworking.send(player, new FireStatePayload(false));
+            sendFireState(player, false);
         }
         remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
     }
@@ -124,7 +124,7 @@ public final class ToadSage {
 
         if (!isToad(player)) {
             if (spray.remove(player.getUuid()) != null) {
-                ServerPlayNetworking.send(player, new FireStatePayload(false));
+                sendFireState(player, false);
             }
             remove(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH);
             remove(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH);
@@ -157,7 +157,7 @@ public final class ToadSage {
             }
 
             if (ticks == 1) {
-                ServerPlayNetworking.send(player, new FireStatePayload(false));
+                sendFireState(player, false);
                 remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
             }
         } else {
@@ -307,6 +307,12 @@ public final class ToadSage {
                                Identifier id) {
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);
         if (instance != null && instance.getModifier(id) != null) instance.removeModifier(id);
+    }
+
+    private static void sendFireState(ServerPlayerEntity source, boolean active) {
+        FireStatePayload payload = new FireStatePayload(source.getUuid(), active);
+        source.getServer().getPlayerManager().getPlayerList().forEach(player ->
+                ServerPlayNetworking.send(player, payload));
     }
 
     private static void dec(Map<UUID, Integer> map, ServerPlayerEntity player) {
