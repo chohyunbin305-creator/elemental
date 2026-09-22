@@ -34,9 +34,10 @@ public abstract class BowItemMixin {
                 || !(projectile instanceof PersistentProjectileEntity arrow)
                 || !Archer.isArcher(player)) return;
 
+        arrow.addCommandTag("elemental_archer_arrow");
         if (Archer.isRapid(player)) {
             arrow.setDamage(arrow.getDamage() * Archer.RAPID_DAMAGE_MULTIPLIER);
-            arrow.setPunch(0);
+            arrow.addCommandTag("elemental_rapid_arrow");
         } else {
             arrow.setDamage(arrow.getDamage() * Archer.FOCUS_DAMAGE_MULTIPLIER);
         }
