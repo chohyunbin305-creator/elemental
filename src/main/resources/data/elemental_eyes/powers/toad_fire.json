@@ -1,0 +1,1 @@
+{"type":"origins:active_self","cooldown":160,"hud_render":{"should_render":true,"bar_index":1},"key":{"key":"key.origins.secondary_active"},"entity_action":{"type":"origins:execute_command","command":"elemental_fire"}}
