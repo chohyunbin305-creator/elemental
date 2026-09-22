@@ -2,7 +2,7 @@
   "origin.elemental_eyes.toad_sage.name": "Toad Sage (Test)",
   "origin.elemental_eyes.toad_sage.description": "A durable fighter with slightly longer melee reach and improved jumping.",
   "power.elemental_eyes.toad_oil.name": "Toad Oil",
-  "power.elemental_eyes.toad_oil.description": "Primary Active: Spray toad oil forward. Targets are oiled for 7 seconds and react to FIRE attacks. Cooldown: 12 seconds.",
+  "power.elemental_eyes.toad_oil.description": "Primary Active: Spray oil forward. Oiled targets react to FIRE and burn for 5 seconds with damage that ignores Fire Resistance. Cooldown: 12 seconds.",
   "power.elemental_eyes.toad_fire.name": "Flame Spray",
-  "power.elemental_eyes.toad_fire.description": "Secondary Active: Spray flames forward for about 1.5 seconds. Ignites oiled targets for an additional effect. Cooldown: 8 seconds."
+  "power.elemental_eyes.toad_fire.description": "Secondary Active: Slow slightly and breathe a wide cone of flame for about 1 second. Damages targets while they remain in the cone and ignites oiled targets. Cooldown: 8 seconds."
 }
