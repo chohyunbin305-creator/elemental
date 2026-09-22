@@ -7,6 +7,8 @@ import net.minecraft.particle.*;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.*;
 import net.minecraft.util.math.*;
@@ -70,6 +72,8 @@ public final class ToadSage {
         LivingEntity target = target(player, 12.0, 1.25);
         if (target != null) {
             ((Oiled) target).elemental$oil(140);
+            world.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 0.9f, 0.72f);
             world.spawnParticles(OIL_BROWN, target.getX(), target.getBodyY(0.5), target.getZ(),
                     28, 0.55, 0.7, 0.55, 0.025);
             world.spawnParticles(ParticleTypes.FALLING_HONEY, target.getX(), target.getBodyY(0.55), target.getZ(),
@@ -81,6 +85,8 @@ public final class ToadSage {
         if (!isToad(player) || fireCd.getOrDefault(player.getUuid(), 0) > 0) return;
         fireCd.put(player.getUuid(), 160);
         spray.put(player.getUuid(), 20); // about 1 second
+        player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 1.0f, 0.72f);
     }
 
     public static void tick(ServerPlayerEntity player) {
@@ -99,7 +105,7 @@ public final class ToadSage {
 
         ensure(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH, 4.0);
         ensure(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH, 0.75);
-        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.10);
+        ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.14);
 
         int ticks = spray.getOrDefault(player.getUuid(), 0);
         if (ticks > 0) {
@@ -108,6 +114,10 @@ public final class ToadSage {
 
             // Dense visual cloud every tick; damage every 4 ticks.
             firePulse(player, ticks % 4 == 0);
+            if (ticks % 5 == 0) {
+                player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
+                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.45f, 0.78f);
+            }
 
             if (ticks == 1) {
                 remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
@@ -177,9 +187,11 @@ public final class ToadSage {
         if (!oiled.elemental$isOiled()) return;
 
         oiled.elemental$oil(0);
-        oiled.elemental$burn(100); // 5 seconds
+        oiled.elemental$burn(100); // refreshed by FIRE hits; remains 5 seconds after the last flame hit
 
         if (target.getWorld() instanceof ServerWorld world) {
+            world.playSound(null, target.getX(), target.getY(), target.getZ(),
+                    SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.8f, 0.85f);
             world.spawnParticles(FIRE_ORANGE, target.getX(), target.getBodyY(0.5), target.getZ(),
                     34, 0.65, 0.8, 0.65, 0.045);
             world.spawnParticles(ParticleTypes.FLAME, target.getX(), target.getBodyY(0.5), target.getZ(),
@@ -205,6 +217,8 @@ public final class ToadSage {
             if (burn % 20 == 0) {
                 // This is intentionally non-fire-tagged damage so Fire Resistance cannot nullify it.
                 entity.damage(entity.getDamageSources().magic(), 1.0f);
+                world.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
+                        SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.55f, 0.9f + world.random.nextFloat() * 0.2f);
             }
             if (burn % 3 == 0) {
                 world.spawnParticles(FIRE_ORANGE,
