@@ -18,3 +18,13 @@ processResources {
 }
 tasks.withType(JavaCompile).configureEach { it.options.release = 21 }
 java { withSourcesJar(); sourceCompatibility = JavaVersion.VERSION_21; targetCompatibility = JavaVersion.VERSION_21 }
+
+sourceSets {
+    main {
+        java {
+            exclude 'kr/fallen/elemental/ElementLogic.java'
+            exclude 'kr/fallen/elemental/ElementCarrier.java'
+            exclude 'kr/fallen/elemental/client/**'
+        }
+    }
+}
