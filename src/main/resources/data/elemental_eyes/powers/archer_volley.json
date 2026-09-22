@@ -1,0 +1,1 @@
+{"type":"origins:active_self","cooldown":1,"hud_render":{"should_render":false},"key":{"key":"key.origins.secondary_active"},"entity_action":{"type":"origins:execute_command","command":"elemental_archer_volley"}}

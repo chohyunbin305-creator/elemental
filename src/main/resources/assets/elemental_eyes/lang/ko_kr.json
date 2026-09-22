@@ -5,4 +5,10 @@
   "power.elemental_eyes.toad_oil.description": "능력 사용(기본): 넓고 길게 두꺼비 기름을 뿜어 범위 안의 모든 대상을 끈적하게 만들고 조금 느려지게 합니다. 기름에 젖은 대상에게 들어오는 불 관련 피해는 화염 저항을 무시합니다. 쿨타임 12초.",
   "power.elemental_eyes.toad_fire.name": "화염 분사",
   "power.elemental_eyes.toad_fire.description": "능력 사용(서브): 키를 누르고 있는 동안 최대 5초간 긴 사거리의 화염을 분사하며 매우 느려집니다. 중간에 키를 놓으면 즉시 중단됩니다. 맞는 동안 일반 화염 피해와 화상이 발생하며, 기름에 젖은 대상을 맞히면 최초 발화 시점부터 13초간 화염 저항을 무시하는 추가 지속 피해가 발생합니다. 쿨타임 8초."
+  ,"origin.elemental_eyes.archer.name": "이름 미정"
+  ,"origin.elemental_eyes.archer.description": "활을 자유롭게 전환해 운용하는 원거리 전투 캐릭터입니다. 활을 당기는 중에도 조금 더 빠르게 움직이며, 자신의 화살을 6회 적중시킬 때마다 관통 사격을 1회 충전합니다. 최대 3회 충전됩니다."
+  ,"power.elemental_eyes.archer_mode.name": "사격 모드 변경"
+  ,"power.elemental_eyes.archer_mode.description": "능력 사용(기본): 집중 모드와 연사 모드를 전환합니다. 집중 모드는 활 피해가 150%가 되며, 연사 모드는 0.1초 만에 최대 위력으로 충전되지만 피해가 15%가 되고 넉백이 사라집니다. 쿨타임 0.5초."
+  ,"power.elemental_eyes.archer_volley.name": "삼중 관통 사격"
+  ,"power.elemental_eyes.archer_volley.description": "능력 사용(서브): 충전을 1개 소비해 벽과 방패를 관통하는 세 줄기의 직선 사격을 발사합니다. 쿨타임은 없으며 최대 3회 저장됩니다."
 }

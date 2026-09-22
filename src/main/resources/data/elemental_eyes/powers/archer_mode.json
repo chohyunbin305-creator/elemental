@@ -1,0 +1,1 @@
+{"type":"origins:active_self","cooldown":10,"hud_render":{"should_render":true,"sprite_location":"elemental_eyes:textures/gui/skill_cooldowns.png","bar_index":0,"icon_index":0,"order":0},"key":{"key":"key.origins.primary_active"},"entity_action":{"type":"origins:execute_command","command":"elemental_archer_mode"}}

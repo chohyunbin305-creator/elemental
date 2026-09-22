@@ -21,9 +21,13 @@ public class ElementalEyes implements ModInitializer {
     @Override
     public void onInitialize() {
         PayloadTypeRegistry.playS2C().register(FireStatePayload.ID, FireStatePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(ArcherStatePayload.ID, ArcherStatePayload.CODEC);
 
         ServerTickEvents.END_SERVER_TICK.register(server ->
-                server.getPlayerManager().getPlayerList().forEach(ToadSage::tick));
+                server.getPlayerManager().getPlayerList().forEach(player -> {
+                    ToadSage.tick(player);
+                    Archer.tick(player);
+                }));
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(literal("elemental_oil").executes(ctx -> {
@@ -39,6 +43,16 @@ public class ElementalEyes implements ModInitializer {
             dispatcher.register(literal("elemental_fire_stop").executes(ctx -> {
                 ServerPlayerEntity p = ctx.getSource().getPlayer();
                 if (p != null) ToadSage.stopFire(p);
+                return 1;
+            }));
+            dispatcher.register(literal("elemental_archer_mode").executes(ctx -> {
+                ServerPlayerEntity p = ctx.getSource().getPlayer();
+                if (p != null) Archer.toggleMode(p);
+                return 1;
+            }));
+            dispatcher.register(literal("elemental_archer_volley").executes(ctx -> {
+                ServerPlayerEntity p = ctx.getSource().getPlayer();
+                if (p != null) Archer.useVolley(p);
                 return 1;
             }));
         });

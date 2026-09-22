@@ -1,1 +1,1 @@
-{"required":true,"package":"kr.fallen.elemental.mixin","compatibilityLevel":"JAVA_21","mixins":["LivingEntityMixin"],"client":["PlayerEntityRendererMixin"],"injectors":{"defaultRequire":1}}
+{"required":true,"package":"kr.fallen.elemental.mixin","compatibilityLevel":"JAVA_21","mixins":["LivingEntityMixin","BowItemMixin","PersistentProjectileEntityMixin"],"client":["PlayerEntityRendererMixin","BowItemClientMixin"],"injectors":{"defaultRequire":1}}
