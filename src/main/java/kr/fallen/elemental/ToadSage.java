@@ -1,6 +1,7 @@
 package kr.fallen.elemental;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.attribute.*;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -8,6 +9,7 @@ import net.minecraft.particle.*;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
@@ -49,6 +51,10 @@ public final class ToadSage {
 
     public static boolean isToad(ServerPlayerEntity player) {
         return OriginBridge.has(player, "elemental_eyes:toad_sage");
+    }
+
+    public static boolean isSpraying(PlayerEntity player) {
+        return spray.getOrDefault(player.getUuid(), 0) > 0;
     }
 
     public static void skillOil(ServerPlayerEntity player) {
@@ -100,12 +106,15 @@ public final class ToadSage {
         if (!isToad(player) || fireCd.getOrDefault(player.getUuid(), 0) > 0) return;
         fireCd.put(player.getUuid(), 160);
         spray.put(player.getUuid(), 100); // hard cap: 5 seconds
+        ServerPlayNetworking.send(player, new FireStatePayload(true));
         player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(),
                 SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.PLAYERS, 0.9f, 0.68f);
     }
 
     public static void stopFire(ServerPlayerEntity player) {
-        spray.remove(player.getUuid());
+        if (spray.remove(player.getUuid()) != null) {
+            ServerPlayNetworking.send(player, new FireStatePayload(false));
+        }
         remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
     }
 
@@ -114,7 +123,9 @@ public final class ToadSage {
         dec(fireCd, player);
 
         if (!isToad(player)) {
-            spray.remove(player.getUuid());
+            if (spray.remove(player.getUuid()) != null) {
+                ServerPlayNetworking.send(player, new FireStatePayload(false));
+            }
             remove(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH);
             remove(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH);
             remove(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP);
@@ -145,7 +156,10 @@ public final class ToadSage {
                         SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS, 0.32f, 0.78f);
             }
 
-            if (ticks == 1) remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
+            if (ticks == 1) {
+                ServerPlayNetworking.send(player, new FireStatePayload(false));
+                remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
+            }
         } else {
             remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
         }

@@ -4,9 +4,14 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.TypedActionResult;
 
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -15,6 +20,8 @@ public class ElementalEyes implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        PayloadTypeRegistry.playS2C().register(FireStatePayload.ID, FireStatePayload.CODEC);
+
         ServerTickEvents.END_SERVER_TICK.register(server ->
                 server.getPlayerManager().getPlayerList().forEach(ToadSage::tick));
 
@@ -37,10 +44,20 @@ public class ElementalEyes implements ModInitializer {
         });
 
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
+            if (ToadSage.isSpraying(player)) return ActionResult.FAIL;
             if (!world.isClient && entity instanceof LivingEntity target) {
                 AttributeSystem.hit(player, target, null);
             }
             return ActionResult.PASS;
         });
+
+        UseItemCallback.EVENT.register((player, world, hand) ->
+                ToadSage.isSpraying(player)
+                        ? TypedActionResult.fail(player.getStackInHand(hand))
+                        : TypedActionResult.pass(player.getStackInHand(hand)));
+        UseBlockCallback.EVENT.register((player, world, hand, hit) ->
+                ToadSage.isSpraying(player) ? ActionResult.FAIL : ActionResult.PASS);
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hit) ->
+                ToadSage.isSpraying(player) ? ActionResult.FAIL : ActionResult.PASS);
     }
 }
