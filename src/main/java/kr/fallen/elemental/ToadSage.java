@@ -36,6 +36,7 @@ public final class ToadSage {
     private static final Identifier HEALTH = Identifier.of(ElementalEyes.MODID, "toad_health");
     private static final Identifier REACH = Identifier.of(ElementalEyes.MODID, "toad_reach");
     private static final Identifier JUMP = Identifier.of(ElementalEyes.MODID, "toad_jump");
+    private static final Identifier SAFE_FALL = Identifier.of(ElementalEyes.MODID, "toad_safe_fall");
     private static final Identifier FIRE_SLOW = Identifier.of(ElementalEyes.MODID, "fire_slow");
 
     private static final DustParticleEffect FIRE_ORANGE =
@@ -129,6 +130,7 @@ public final class ToadSage {
             remove(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH);
             remove(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH);
             remove(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP);
+            remove(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, SAFE_FALL);
             remove(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, FIRE_SLOW);
             if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
             return;
@@ -137,6 +139,7 @@ public final class ToadSage {
         ensure(player, EntityAttributes.GENERIC_MAX_HEALTH, HEALTH, 4.0);
         ensure(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE, REACH, 0.75);
         ensure(player, EntityAttributes.GENERIC_JUMP_STRENGTH, JUMP, 0.30);
+        ensure(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, SAFE_FALL, 2.0);
 
         int ticks = spray.getOrDefault(player.getUuid(), 0);
         if (ticks > 0) {
