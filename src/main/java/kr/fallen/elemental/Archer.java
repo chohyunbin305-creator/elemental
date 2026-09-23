@@ -25,14 +25,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class Archer {
+    public static final ThreadLocal<Boolean> RAPID_HIT = ThreadLocal.withInitial(()->false);
     private Archer() {}
 
     public static final double FOCUS_DAMAGE_MULTIPLIER = 1.50;
-    public static final double RAPID_DAMAGE_MULTIPLIER = 0.15;
-    public static final int HITS_PER_CHARGE = 6;
-    public static final int MAX_CHARGES = 3;
-    public static final double VOLLEY_RANGE = 18.0;
-    public static final float VOLLEY_DAMAGE = 4.0f;
+    public static final double RAPID_DAMAGE_MULTIPLIER = 0.12;
+    public static final int HITS_PER_CHARGE = 3;
+    public static final int MAX_CHARGES = 2;
+    public static final double VOLLEY_RANGE = 48.0;
+    public static final float VOLLEY_DAMAGE = 9.0f;
 
     private static final Identifier DRAW_SPEED =
             Identifier.of(ElementalEyes.MODID, "archer_draw_speed");
@@ -49,6 +50,10 @@ public final class Archer {
 
     public static boolean isRapid(ServerPlayerEntity player) {
         return isArcher(player) && rapidMode.getOrDefault(player.getUuid(), false);
+    }
+
+    public static boolean isRapidPlayer(net.minecraft.entity.player.PlayerEntity player) {
+        return player instanceof ServerPlayerEntity server ? isRapid(server) : player.getCommandTags().contains("elemental_rapid_client");
     }
 
     public static void tick(ServerPlayerEntity player) {
@@ -113,41 +118,12 @@ public final class Archer {
     }
 
     private static void fireVolley(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
-        Vec3d start = player.getEyePos().add(0, -0.12, 0);
-        Vec3d forward = player.getRotationVec(1).normalize();
-        Vec3d side = new Vec3d(-forward.z, 0, forward.x);
-        if (side.lengthSquared() < 0.001) side = new Vec3d(1, 0, 0);
-        else side = side.normalize();
-
-        world.playSound(null, player.getX(), player.getEyeY(), player.getZ(),
-                SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0f, 1.55f);
-
-        for (double lane : new double[]{-0.72, 0.0, 0.72}) {
-            Vec3d laneStart = start.add(side.multiply(lane));
-            for (double d = 0.5; d <= VOLLEY_RANGE; d += 0.55) {
-                Vec3d point = laneStart.add(forward.multiply(d));
-                world.spawnParticles(BEAM, point.x, point.y, point.z,
-                        2, 0.035, 0.035, 0.035, 0.0);
-                if (((int) (d * 10)) % 11 == 0) {
-                    world.spawnParticles(ParticleTypes.CRIT, point.x, point.y, point.z,
-                            1, 0.02, 0.02, 0.02, 0.0);
-                }
-            }
-
-            Box area = new Box(laneStart, laneStart.add(forward.multiply(VOLLEY_RANGE))).expand(0.7);
-            for (LivingEntity target : world.getEntitiesByClass(
-                    LivingEntity.class, area,
-                    e -> e != player && e.isAlive() && !e.isSpectator())) {
-                Vec3d to = target.getBoundingBox().getCenter().subtract(laneStart);
-                double along = to.dotProduct(forward);
-                if (along < 0 || along > VOLLEY_RANGE) continue;
-                double distance = to.subtract(forward.multiply(along)).length();
-                if (distance <= 0.62 + target.getWidth() * 0.35) {
-                    // Sonic-boom damage bypasses shields; no visibility check means walls are penetrated.
-                    target.damage(target.getDamageSources().sonicBoom(player), VOLLEY_DAMAGE);
-                }
-            }
+        Vec3d a=player.getEyePos(), b=a.add(player.getRotationVec(1).multiply(VOLLEY_RANGE));
+        Characters.beam(player,a,b,0);
+        player.getServerWorld().playSound(null,player.getX(),player.getY(),player.getZ(),
+            SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST,SoundCategory.PLAYERS,.8f,1.25f);
+        for(LivingEntity target:Characters.lineTargets(player,a,b,.22)) {
+            if(target.damage(Characters.damage(player,"halo_point"),VOLLEY_DAMAGE))Characters.bleed(target,player);
         }
     }
 

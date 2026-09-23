@@ -1,0 +1,11 @@
+{
+  "icon": {
+    "id": "minecraft:iron_ingot"
+  },
+  "order": 3,
+  "impact": 2,
+  "powers": [
+    "elemental_eyes:android_display",
+    "elemental_eyes:android_launcher"
+  ]
+}

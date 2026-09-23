@@ -23,13 +23,20 @@ public abstract class PersistentProjectileEntityMixin {
         }
     }
 
-    @Inject(method = "onEntityHit", at = @At("TAIL"))
-    private void elemental$countArcherHit(EntityHitResult hit, CallbackInfo ci) {
+    @org.spongepowered.asm.mixin.injection.Redirect(method = "onEntityHit", at = @At(value="INVOKE", target="Lnet/minecraft/entity/Entity;damage(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
+    private boolean elemental$countArcherHit(net.minecraft.entity.Entity target, DamageSource source, float amount) {
         PersistentProjectileEntity self = (PersistentProjectileEntity) (Object) this;
-        if (hit.getEntity() instanceof LivingEntity
+        boolean previous=Archer.RAPID_HIT.get();
+        Archer.RAPID_HIT.set(self.getCommandTags().contains("elemental_rapid_arrow"));
+        boolean successful;
+        try { successful=target.damage(source,amount); }
+        finally { Archer.RAPID_HIT.set(previous); }
+        if (successful && target instanceof LivingEntity
                 && self.getCommandTags().contains("elemental_archer_arrow")
-                && self.getOwner() instanceof ServerPlayerEntity player) {
+                && !self.getCommandTags().contains("elemental_rapid_arrow")
+                && self.getOwner() instanceof ServerPlayerEntity player && target!=player) {
             Archer.onArrowHit(player);
         }
+        return successful;
     }
 }

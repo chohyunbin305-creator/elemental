@@ -1,0 +1,11 @@
+{
+  "icon": {
+    "id": "minecraft:crossbow"
+  },
+  "order": 4,
+  "impact": 2,
+  "powers": [
+    "elemental_eyes:outlaw_roll",
+    "elemental_eyes:outlaw_lasso"
+  ]
+}

@@ -27,6 +27,7 @@ public class ElementalEyesClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        CharacterClient.init();
         ClientPlayNetworking.registerGlobalReceiver(FireStatePayload.ID, (payload, context) ->
                 context.client().execute(() -> {
                     if (payload.active()) FLAME_ACTIVE.add(payload.playerId());
@@ -38,6 +39,10 @@ public class ElementalEyesClient implements ClientModInitializer {
                     archerRapid = payload.rapid();
                     archerCharges = payload.charges();
                     archerHitProgress = payload.hitProgress();
+                    if(context.client().player!=null) {
+                        if(payload.enabled() && payload.rapid())context.client().player.addCommandTag("elemental_rapid_client");
+                        else context.client().player.removeCommandTag("elemental_rapid_client");
+                    }
                 }));
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
         HudRenderCallback.EVENT.register(this::renderArcherHud);
@@ -85,15 +90,15 @@ public class ElementalEyesClient implements ClientModInitializer {
         context.drawTextWithShadow(client.textRenderer,
                 archerRapid ? "연사" : "집중", x, y - 10,
                 archerRapid ? 0xFF8FD8FF : 0xFFFFD77A);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             int left = x + i * 18;
             context.fill(left, y, left + 15, y + 6, 0xD018202A);
             context.fill(left + 1, y + 1, left + 14, y + 5,
                     i < archerCharges ? 0xFF67D7C4 : 0xFF394550);
         }
-        if (archerCharges < 3) {
-            int width = (int) Math.round(51.0 * archerHitProgress / 6.0);
-            context.fill(x, y + 8, x + 51, y + 10, 0xB018202A);
+        if (archerCharges < 2) {
+            int width = (int) Math.round(33.0 * archerHitProgress / 3.0);
+            context.fill(x, y + 8, x + 33, y + 10, 0xB018202A);
             context.fill(x, y + 8, x + width, y + 10, 0xFF9BB8D0);
         }
     }

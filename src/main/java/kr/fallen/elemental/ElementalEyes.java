@@ -22,12 +22,21 @@ public class ElementalEyes implements ModInitializer {
     public void onInitialize() {
         PayloadTypeRegistry.playS2C().register(FireStatePayload.ID, FireStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(ArcherStatePayload.ID, ArcherStatePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(CharacterStatePayload.ID,CharacterStatePayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(BeamPayload.ID,BeamPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(ControlPayload.ID,ControlPayload.CODEC);
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(ControlPayload.ID,(payload,context)->
+            context.server().execute(()->Characters.controls(context.player(),payload.primary(),payload.secondary())));
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server->Characters.clear());
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler,server)->Characters.disconnect(handler.player));
 
         ServerTickEvents.END_SERVER_TICK.register(server ->
                 server.getPlayerManager().getPlayerList().forEach(player -> {
                     ToadSage.tick(player);
                     Archer.tick(player);
+                    Characters.tick(player);
                 }));
+        ServerTickEvents.END_SERVER_TICK.register(server->Characters.worldTick());
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(literal("elemental_oil").executes(ctx -> {
@@ -71,7 +80,14 @@ public class ElementalEyes implements ModInitializer {
                         : TypedActionResult.pass(player.getStackInHand(hand)));
         UseBlockCallback.EVENT.register((player, world, hand, hit) ->
                 ToadSage.isSpraying(player) ? ActionResult.FAIL : ActionResult.PASS);
-        UseEntityCallback.EVENT.register((player, world, hand, entity, hit) ->
-                ToadSage.isSpraying(player) ? ActionResult.FAIL : ActionResult.PASS);
+        UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
+            if(ToadSage.isSpraying(player))return ActionResult.FAIL;
+            if(Characters.outlaw(player) && !player.isSneaking() && entity instanceof net.minecraft.entity.passive.AbstractHorseEntity horse
+                && !horse.isBaby() && !horse.hasPassengers()) {
+                if(!world.isClient)player.startRiding(horse);
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.PASS;
+        });
     }
 }

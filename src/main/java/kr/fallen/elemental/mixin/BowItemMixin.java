@@ -15,17 +15,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(net.minecraft.item.BowItem.class)
 public abstract class BowItemMixin {
-    @ModifyVariable(method = "onStoppedUsing", at = @At("HEAD"), argsOnly = true, ordinal = 0)
-    private int elemental$rapidFullCharge(int remainingUseTicks, ItemStack stack,
-                                          World world, LivingEntity user) {
-        if (user instanceof ServerPlayerEntity player && Archer.isRapid(player)) {
-            int max = stack.getMaxUseTime(user);
-            int used = max - remainingUseTicks;
-            if (used >= 2) return max - 20;
+    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
+    private void elemental$clickFire(World world, net.minecraft.entity.player.PlayerEntity user,
+        net.minecraft.util.Hand hand, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.util.TypedActionResult<ItemStack>> cir) {
+        if (!Archer.isRapidPlayer(user)) return;
+        ItemStack stack=user.getStackInHand(hand);
+        if(user.getItemCooldownManager().isCoolingDown(stack.getItem())) {
+            cir.setReturnValue(net.minecraft.util.TypedActionResult.fail(stack)); return;
         }
-        return remainingUseTicks;
+        if(!user.isCreative() && user.getProjectileType(stack).isEmpty()) {
+            cir.setReturnValue(net.minecraft.util.TypedActionResult.fail(stack)); return;
+        }
+        user.setCurrentHand(hand);
+        ((net.minecraft.item.BowItem)(Object)this).onStoppedUsing(stack,world,user,stack.getMaxUseTime(user)-20);
+        user.clearActiveItem();
+        user.getItemCooldownManager().set(stack.getItem(),2);
+        cir.setReturnValue(net.minecraft.util.TypedActionResult.success(stack,world.isClient));
     }
-
     @Inject(method = "shoot", at = @At("TAIL"))
     private void elemental$modifyArrow(LivingEntity shooter, ProjectileEntity projectile,
                                        int index, float speed, float divergence, float yaw,
