@@ -17,7 +17,16 @@ public final class CharacterClient {
     private static CharacterStatePayload state=new CharacterStatePayload(0,0,false,false,0,0);
     private static KeyBinding primary,secondary;
     private static boolean wasPrimary,wasSecondary;
+    private static final java.util.Map<java.util.UUID,Long> LAUNCHER_POSES=new java.util.HashMap<>();
+    public static boolean isLaunching(java.util.UUID id) {
+        MinecraftClient c=MinecraftClient.getInstance();
+        return c.world!=null && LAUNCHER_POSES.getOrDefault(id,-1L)>=c.world.getTime();
+    }
     public static void init() {
+        ClientPlayNetworking.registerGlobalReceiver(LauncherPosePayload.ID,(p,c)->c.client().execute(()->{
+            if(p.active() && c.client().world!=null)LAUNCHER_POSES.put(p.playerId(),c.client().world.getTime()+8);
+            else LAUNCHER_POSES.remove(p.playerId());
+        }));
         ClientPlayNetworking.registerGlobalReceiver(CharacterStatePayload.ID,(p,c)->c.client().execute(()->{
             state=p;
             if(c.client().player!=null) {
@@ -36,7 +45,8 @@ public final class CharacterClient {
         catch(ReflectiveOperationException e){return null;}
     }
     private static void tick(MinecraftClient c) {
-        if(c.player==null || c.world==null) {state=new CharacterStatePayload(0,0,false,false,0,0);wasPrimary=false;wasSecondary=false;return;}
+        if(c.player==null || c.world==null) {state=new CharacterStatePayload(0,0,false,false,0,0);wasPrimary=false;wasSecondary=false;LAUNCHER_POSES.clear();return;}
+        LAUNCHER_POSES.values().removeIf(expiry->expiry<c.world.getTime());
         if(primary==null)primary=binding("primaryActiveKeyBinding");
         if(secondary==null)secondary=binding("secondaryActiveKeyBinding");
         boolean a=c.currentScreen==null && primary!=null && primary.isPressed();
@@ -59,19 +69,37 @@ public final class CharacterClient {
         Vec3d dir=b.subtract(a);double length=dir.length();if(length<.001)return;
         dir=dir.normalize();
         Vector3f color=p.style()==0?new Vector3f(.15f,1f,.38f):p.style()==1?new Vector3f(.15f,.55f,1f):new Vector3f(.4f,.23f,.10f);
-        DustParticleEffect effect=new DustParticleEffect(color,p.style()==1?1.7f:p.style()==2?.65f:1.0f);
+        DustParticleEffect effect=new DustParticleEffect(color,p.style()==1?3.5f:p.style()==2?.65f:1.25f);
+        DustParticleEffect core=new DustParticleEffect(new Vector3f(.78f,.95f,1f),4.0f);
         Vec3d side=dir.crossProduct(new Vec3d(0,1,0));
         if(side.lengthSquared()<.001)side=new Vec3d(1,0,0);else side=side.normalize();
         Vec3d up=side.crossProduct(dir).normalize();
-        for(double d=0;d<Math.min(length,128);d+=p.style()==2?.35:.3) {
+        for(double d=.5;d<Math.min(length,128);d+=p.style()==1?.5:p.style()==2?.35:.3) {
             Vec3d pos=a.add(dir.multiply(d));
-            int count=p.style()==1?5:1;
+            int count=p.style()==1?9:p.style()==0?3:1;
             for(int i=0;i<count;i++) {
                 Vec3d v=pos;
-                if(i>0) {double angle=i*Math.PI/2;v=v.add(side.multiply(Math.cos(angle)*.7)).add(up.multiply(Math.sin(angle)*.7));}
-                var particle=c.particleManager.addParticle(effect,v.x,v.y,v.z,0,0,0);
+                if(i>0) {double angle=i*Math.PI/4+d*.75+c.world.getTime()*.3;
+                    double radius=p.style()==1?1.0:.19;
+                    v=v.add(side.multiply(Math.cos(angle)*radius)).add(up.multiply(Math.sin(angle)*radius));}
+                var particle=c.particleManager.addParticle(p.style()==1 && i==0?core:effect,v.x,v.y,v.z,0,0,0);
                 if(particle!=null)particle.setMaxAge(p.style()==0?4:3);
             }
+            if(p.style()==1 && ((int)(d*2))%4==0) {
+                var glow=c.particleManager.addParticle(net.minecraft.particle.ParticleTypes.END_ROD,pos.x,pos.y,pos.z,0,0,0);
+                if(glow!=null)glow.setMaxAge(3);
+            }
+        }
+        if(p.style()==0) {
+            Vec3d muzzle=a.add(dir.multiply(1.2));
+            for(int i=0;i<32;i++) {
+                double angle=i*Math.PI/16;
+                Vec3d point=muzzle.add(side.multiply(Math.cos(angle)*.6)).add(up.multiply(Math.sin(angle)*.6));
+                var spark=c.particleManager.addParticle(effect,point.x,point.y,point.z,0,0,0);
+                if(spark!=null)spark.setMaxAge(5);
+            }
+            var flash=c.particleManager.addParticle(net.minecraft.particle.ParticleTypes.FLASH,muzzle.x,muzzle.y,muzzle.z,0,0,0);
+            if(flash!=null)flash.setMaxAge(3);
         }
     }
     private static void text(DrawContext g,String s,int x,int y,int color) {

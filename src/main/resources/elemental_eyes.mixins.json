@@ -11,10 +11,12 @@
     "FoodSpeedMixin",
     "CrossbowSpeedMixin",
     "OutlawHorseMixin",
-    "AndroidMovementMixin"
+    "AndroidMovementMixin",
+    "LauncherFireImmunityMixin"
   ],
   "client": [
-    "PlayerEntityRendererMixin"
+    "PlayerEntityRendererMixin",
+    "LauncherFirstPersonMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -40,6 +40,20 @@ public final class Archer {
     private static final Map<UUID, Boolean> rapidMode = new HashMap<>();
     private static final Map<UUID, Integer> charges = new HashMap<>();
     private static final Map<UUID, Integer> hitProgress = new HashMap<>();
+    // Entity identity keeps client prediction separate from the integrated server.
+    private static final Map<net.minecraft.entity.player.PlayerEntity, RapidCycle> rapidCycles = new java.util.WeakHashMap<>();
+    private static final class RapidCycle { int shots; long ready; }
+    public static boolean canRapidFire(net.minecraft.entity.player.PlayerEntity p) {
+        RapidCycle cycle=rapidCycles.get(p);
+        return cycle==null || p.getWorld().getTime()>=cycle.ready;
+    }
+    public static int rapidFired(net.minecraft.entity.player.PlayerEntity p) {
+        RapidCycle cycle=rapidCycles.computeIfAbsent(p,k->new RapidCycle());
+        int cooldown=++cycle.shots>=5?20:4;
+        if(cycle.shots>=5)cycle.shots=0;
+        cycle.ready=p.getWorld().getTime()+cooldown;
+        return cooldown;
+    }
 
     private static final DustParticleEffect BEAM =
             new DustParticleEffect(new Vector3f(0.70f, 0.88f, 1.0f), 1.15f);
@@ -122,6 +136,8 @@ public final class Archer {
         Characters.beam(player,a,b,0);
         player.getServerWorld().playSound(null,player.getX(),player.getY(),player.getZ(),
             SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST,SoundCategory.PLAYERS,.8f,1.25f);
+        player.getServerWorld().playSound(null,player.getX(),player.getY(),player.getZ(),
+            SoundEvents.ENTITY_WARDEN_SONIC_BOOM,SoundCategory.PLAYERS,.75f,1.15f);
         for(LivingEntity target:Characters.lineTargets(player,a,b,.22)) {
             if(target.damage(Characters.damage(player,"halo_point"),VOLLEY_DAMAGE))Characters.bleed(target,player);
         }

@@ -24,6 +24,7 @@ public class ElementalEyes implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(ArcherStatePayload.ID, ArcherStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(CharacterStatePayload.ID,CharacterStatePayload.CODEC);
         PayloadTypeRegistry.playS2C().register(BeamPayload.ID,BeamPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(LauncherPosePayload.ID,LauncherPosePayload.CODEC);
         PayloadTypeRegistry.playC2S().register(ControlPayload.ID,ControlPayload.CODEC);
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(ControlPayload.ID,(payload,context)->
             context.server().execute(()->Characters.controls(context.player(),payload.primary(),payload.secondary())));

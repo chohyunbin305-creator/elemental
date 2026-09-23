@@ -20,7 +20,7 @@ public abstract class BowItemMixin {
         net.minecraft.util.Hand hand, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.util.TypedActionResult<ItemStack>> cir) {
         if (!Archer.isRapidPlayer(user)) return;
         ItemStack stack=user.getStackInHand(hand);
-        if(user.getItemCooldownManager().isCoolingDown(stack.getItem())) {
+        if(!Archer.canRapidFire(user) || user.getItemCooldownManager().isCoolingDown(stack.getItem())) {
             cir.setReturnValue(net.minecraft.util.TypedActionResult.fail(stack)); return;
         }
         if(!user.isCreative() && user.getProjectileType(stack).isEmpty()) {
@@ -29,7 +29,7 @@ public abstract class BowItemMixin {
         user.setCurrentHand(hand);
         ((net.minecraft.item.BowItem)(Object)this).onStoppedUsing(stack,world,user,stack.getMaxUseTime(user)-20);
         user.clearActiveItem();
-        user.getItemCooldownManager().set(stack.getItem(),2);
+        user.getItemCooldownManager().set(stack.getItem(),Archer.rapidFired(user));
         cir.setReturnValue(net.minecraft.util.TypedActionResult.success(stack,world.isClient));
     }
     @Inject(method = "shoot", at = @At("TAIL"))

@@ -60,7 +60,7 @@ public final class Characters {
             if(k==2 && !s.aiming && !p.hasVehicle()) {
                 Vec3d look=p.getRotationVec(1);
                 s.rollDirection=new Vec3d(-look.x,0,-look.z).normalize().multiply(.40);
-                s.roll=5; s.mainCd=200;
+                s.roll=10; s.mainCd=200;
             }
         }
         if (secondary && !s.secondary && s.subCd==0) {
@@ -111,8 +111,12 @@ public final class Characters {
                     if(s.gauge<=0)stopLauncher(s);
                     else { s.gauge--; Vec3d a=p.getEyePos(), b=a.add(p.getRotationVec(1).multiply(32));
                         beam(p,a,b,1);
-                        if(p.age%4==0) for(LivingEntity e:lineTargets(p,a,b,1.25))e.damage(damage(p,"launcher"),1.5f);
-                        if(p.age%12==0)sound(p,SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE,.65f,1.8f);
+                        if(p.age%4==0) for(LivingEntity e:lineTargets(p,a,b,1.25))e.damage(damage(p,"launcher"),.75f);
+                        if(p.age%12==0) {
+                            sound(p,SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE,.55f,1.8f);
+                            sound(p,SoundEvents.ENTITY_WITHER_SHOOT,.45f,.75f);
+                            sound(p,SoundEvents.ENTITY_PHANTOM_FLAP,.55f,.7f);
+                        }
                         if(s.gauge==0)stopLauncher(s);
                     }
                 }
@@ -133,6 +137,11 @@ public final class Characters {
         }
         modifier(p,EntityAttributes.GENERIC_MOVEMENT_SPEED,SPEED,slow,EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         if(p.age%2==0)ServerPlayNetworking.send(p,new CharacterStatePayload(k,s.gauge,s.display,s.firing,s.mainCd,s.subCd));
+        if(p.age%2==0) {
+            LauncherPosePayload pose=new LauncherPosePayload(p.getUuid(),s.firing);
+            for(ServerPlayerEntity viewer:p.getServerWorld().getPlayers())
+                if(viewer.squaredDistanceTo(p)<16384)ServerPlayNetworking.send(viewer,pose);
+        }
     }
     public static void disconnect(ServerPlayerEntity p) { STATES.remove(p.getUuid()); }
     public static float incoming(LivingEntity e, DamageSource d, float amount) {

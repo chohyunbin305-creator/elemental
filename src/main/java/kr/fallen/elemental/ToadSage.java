@@ -267,7 +267,7 @@ public final class ToadSage {
             if (burn % 10 == 0) {
                 world.playSound(null, entity.getX(), entity.getY(), entity.getZ(),
                         SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.PLAYERS,
-                        0.62f, 0.88f + world.random.nextFloat() * 0.18f);
+                        1.05f, 0.88f + world.random.nextFloat() * 0.18f);
             }
             if (burn % 3 == 0) {
                 world.spawnParticles(FIRE_ORANGE,
