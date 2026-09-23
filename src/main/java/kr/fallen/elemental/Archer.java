@@ -41,7 +41,7 @@ public final class Archer {
     private static final Map<UUID, Integer> charges = new HashMap<>();
     private static final Map<UUID, Integer> hitProgress = new HashMap<>();
     // Entity identity keeps client prediction separate from the integrated server.
-    private static final Map<net.minecraft.entity.player.PlayerEntity, RapidCycle> rapidCycles = new java.util.WeakHashMap<>();
+    private static final Map<net.minecraft.entity.player.PlayerEntity, RapidCycle> rapidCycles = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private static final class RapidCycle { int shots; long ready; }
     public static boolean canRapidFire(net.minecraft.entity.player.PlayerEntity p) {
         RapidCycle cycle=rapidCycles.get(p);
