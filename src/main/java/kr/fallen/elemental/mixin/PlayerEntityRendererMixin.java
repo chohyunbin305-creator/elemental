@@ -21,7 +21,7 @@ public abstract class PlayerEntityRendererMixin {
             cir.setReturnValue(BipedEntityModel.ArmPose.TOOT_HORN);
         }
         if (hand == Hand.MAIN_HAND && kr.fallen.elemental.client.CharacterClient.isLaunching(player.getUuid())) {
-            cir.setReturnValue(BipedEntityModel.ArmPose.BLOCK);
+            cir.setReturnValue(BipedEntityModel.ArmPose.BOW_AND_ARROW);
         }
     }
 }

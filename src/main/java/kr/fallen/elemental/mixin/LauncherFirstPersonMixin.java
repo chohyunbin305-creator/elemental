@@ -20,10 +20,14 @@ public abstract class LauncherFirstPersonMixin {
         matrices.push();
         if(hand==Hand.MAIN_HAND && CharacterClient.isLaunching(player.getUuid())) {
             int side=player.getMainArm()==Arm.RIGHT?1:-1;
-            matrices.translate(-side*.25,.18,-.12);
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-35));
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(side*20));
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(side*55));
+            // Vanilla fully drawn bow transforms, without creating a bow item.
+            matrices.translate(-side*.2785682,.18344387,.15731531);
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-13.935));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(side*35.3f));
+            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-side*9.785f));
+            matrices.translate(0,0,.04);
+            matrices.scale(1,1,1.2f);
+            matrices.multiply(RotationAxis.NEGATIVE_Y.rotationDegrees(side*45));
         }
     }
     @Inject(method="renderFirstPersonItem",at=@At("RETURN"))

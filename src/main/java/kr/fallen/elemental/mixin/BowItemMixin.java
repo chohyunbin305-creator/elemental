@@ -14,7 +14,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(net.minecraft.item.BowItem.class)
-public abstract class BowItemMixin {
+public abstract class BowItemMixin extends net.minecraft.item.RangedWeaponItem {
+    protected BowItemMixin(net.minecraft.item.Item.Settings settings) { super(settings); }
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void elemental$clickFire(World world, net.minecraft.entity.player.PlayerEntity user,
         net.minecraft.util.Hand hand, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<net.minecraft.util.TypedActionResult<ItemStack>> cir) {
@@ -26,10 +27,21 @@ public abstract class BowItemMixin {
         if(!user.isCreative() && user.getProjectileType(stack).isEmpty()) {
             cir.setReturnValue(net.minecraft.util.TypedActionResult.fail(stack)); return;
         }
-        user.setCurrentHand(hand);
-        ((net.minecraft.item.BowItem)(Object)this).onStoppedUsing(stack,world,user,stack.getMaxUseTime(user)-20);
-        user.clearActiveItem();
-        user.getItemCooldownManager().set(stack.getItem(),Archer.rapidFired(user));
+        // Load and shoot on the authoritative server only. Client prediction must
+        // not consume ammunition or install a cooldown before the use packet.
+        if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+            java.util.List<ItemStack> projectiles = load(stack, user.getProjectileType(stack), user);
+            if (projectiles.isEmpty()) {
+                cir.setReturnValue(net.minecraft.util.TypedActionResult.fail(stack)); return;
+            }
+            shootAll(serverWorld, user, hand, stack, projectiles, 3.0f, 1.0f, true, null);
+            world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                net.minecraft.sound.SoundEvents.ENTITY_ARROW_SHOOT,
+                net.minecraft.sound.SoundCategory.PLAYERS, 1.0f,
+                1.0f / (world.random.nextFloat() * .4f + 1.2f) + .5f);
+            user.incrementStat(net.minecraft.stat.Stats.USED.getOrCreateStat((net.minecraft.item.BowItem)(Object)this));
+            user.getItemCooldownManager().set(stack.getItem(), Archer.rapidFired(user));
+        }
         cir.setReturnValue(net.minecraft.util.TypedActionResult.success(stack,world.isClient));
     }
     @Inject(method = "shoot", at = @At("TAIL"))

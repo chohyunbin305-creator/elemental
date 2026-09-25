@@ -49,7 +49,7 @@ public final class Archer {
     }
     public static int rapidFired(net.minecraft.entity.player.PlayerEntity p) {
         RapidCycle cycle=rapidCycles.computeIfAbsent(p,k->new RapidCycle());
-        int cooldown=++cycle.shots>=5?20:4;
+        int cooldown=++cycle.shots>=5?20:5;
         if(cycle.shots>=5)cycle.shots=0;
         cycle.ready=p.getWorld().getTime()+cooldown;
         return cooldown;

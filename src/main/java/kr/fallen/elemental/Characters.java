@@ -59,8 +59,8 @@ public final class Characters {
             if(k==1 && !s.firing) s.display=true;
             if(k==2 && !s.aiming && !p.hasVehicle()) {
                 Vec3d look=p.getRotationVec(1);
-                s.rollDirection=new Vec3d(-look.x,0,-look.z).normalize().multiply(.40);
-                s.roll=10; s.mainCd=200;
+                s.rollDirection=new Vec3d(-look.x,0,-look.z).normalize().multiply(1.33);
+                s.roll=4; s.mainCd=200;
             }
         }
         if (secondary && !s.secondary && s.subCd==0) {
@@ -131,7 +131,9 @@ public final class Characters {
         if(k==2) {
             if(s.aiming)slow=-.45;
             if(s.roll>0) {
-                s.roll--; p.setVelocity(s.rollDirection.x,Math.min(p.getVelocity().y,0),s.rollDirection.z); p.velocityModified=true;
+                s.roll--;
+                Vec3d dash = s.roll == 0 ? Vec3d.ZERO : s.rollDirection;
+                p.setVelocity(dash.x,Math.min(p.getVelocity().y,0),dash.z); p.velocityModified=true;
                 p.getServerWorld().spawnParticles(ParticleTypes.POOF,p.getX(),p.getY()+.2,p.getZ(),2,.14,.05,.14,.01);
             }
         }
