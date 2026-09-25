@@ -22,7 +22,7 @@ public abstract class LauncherFirstPersonMixin {
             int side=player.getMainArm()==Arm.RIGHT?1:-1;
             // Vanilla fully drawn bow transforms, without creating a bow item.
             matrices.translate(-side*.2785682,.18344387,.15731531);
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-13.935));
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-13.935f));
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(side*35.3f));
             matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-side*9.785f));
             matrices.translate(0,0,.04);

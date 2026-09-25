@@ -8,7 +8,7 @@
   "origin.elemental_eyes.archer.name": "명사수",
   "origin.elemental_eyes.archer.description": "활을 당기는 동안 조금 빠르게 이동합니다. 집중 모드로 발사한 화살을 3회 명중시키면 할로 포인트 1회 충전, 최대 2회 저장합니다. 연사 모드 화살은 충전에 관여하지 않습니다.",
   "power.elemental_eyes.archer_mode.name": "전술 변경",
-  "power.elemental_eyes.archer_mode.description": "기본 능력 키: 집중/연사 전환. 집중 피해 150%. 연사는 0.2초 간격, 5발 발사 후 1초 재장전. 피해 12%, 넉백 없음. 활 인챈트와 화살 종류를 유지합니다. 전환 쿨타임 0.5초.",
+  "power.elemental_eyes.archer_mode.description": "기본 능력 키: 집중/연사 전환. 집중 피해 150%. 연사는 0.25초 간격, 5발 발사 후 1초 재장전. 피해 12%, 넉백 없음. 활 인챈트와 화살 종류를 유지합니다. 전환 쿨타임 0.5초.",
   "power.elemental_eyes.archer_volley.name": "할로 포인트",
   "power.elemental_eyes.archer_volley.description": "서브 능력 키: 충전 1회를 소비해 48칸의 초록 관통선을 즉시 발사합니다. 벽·방패·방어력을 무시하는 피해 9와 4초간 약한 출혈을 줍니다. 쿨타임 없음, 최대 2회 저장.",
   "origin.elemental_eyes.android.name": "안드로이드",
